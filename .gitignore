@@ -1,7 +1,28 @@
 # Local configuration and assembled private data.
 .second-self.local.json
-01-strategy-storage/
 02-skills-projects/projects/
+
+# Track only the empty user-facing Layer 1 folder scaffold. All private
+# contents and system-managed Layer 1 folders remain ignored.
+01-strategy-storage/*
+!01-strategy-storage/00 Memory/
+!01-strategy-storage/01 Notes/
+!01-strategy-storage/02 Journal/
+!01-strategy-storage/03 Strategy/
+!01-strategy-storage/04 References/
+!01-strategy-storage/05 Reviews/
+01-strategy-storage/00 Memory/*
+01-strategy-storage/01 Notes/*
+01-strategy-storage/02 Journal/*
+01-strategy-storage/03 Strategy/*
+01-strategy-storage/04 References/*
+01-strategy-storage/05 Reviews/*
+!01-strategy-storage/00 Memory/.gitkeep
+!01-strategy-storage/01 Notes/.gitkeep
+!01-strategy-storage/02 Journal/.gitkeep
+!01-strategy-storage/03 Strategy/.gitkeep
+!01-strategy-storage/04 References/.gitkeep
+!01-strategy-storage/05 Reviews/.gitkeep
 
 # Private or generated runtime state.
 .second-self-cache/

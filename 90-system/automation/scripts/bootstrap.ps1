@@ -69,13 +69,40 @@ $Links = @{
     (Join-Path $RepoRoot "01-strategy-storage") = (Join-Path $DataRoot "01-strategy-storage")
     (Join-Path $RepoRoot "02-skills-projects\projects") = (Join-Path $DataRoot "02-skills-projects\projects")
 }
+$Layer1ScaffoldFiles = @(
+    "00 Memory\.gitkeep",
+    "01 Notes\.gitkeep",
+    "02 Journal\.gitkeep",
+    "03 Strategy\.gitkeep",
+    "04 References\.gitkeep",
+    "05 Reviews\.gitkeep"
+)
 foreach ($entry in $Links.GetEnumerator()) {
     if (Test-Path -LiteralPath $entry.Key) {
         $item = Get-Item -LiteralPath $entry.Key -Force
-        if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+            continue
+        }
+        if ($entry.Key -eq (Join-Path $RepoRoot "01-strategy-storage")) {
+            $existingFiles = @(
+                Get-ChildItem -LiteralPath $entry.Key -File -Recurse -Force |
+                    ForEach-Object {
+                        [IO.Path]::GetRelativePath($entry.Key, $_.FullName)
+                    }
+            )
+            $unexpectedFiles = @(
+                $existingFiles | Where-Object { $_ -notin $Layer1ScaffoldFiles }
+            )
+            if ($unexpectedFiles.Count -eq 0) {
+                Remove-Item -LiteralPath $entry.Key -Recurse -Force
+            }
+            else {
+                throw "Refusing to replace Layer 1 scaffold containing user files: $($unexpectedFiles -join ', ')"
+            }
+        }
+        else {
             throw "Refusing to replace non-link path: $($entry.Key)"
         }
-        continue
     }
     New-Item -ItemType Junction -Path $entry.Key -Target $entry.Value | Out-Null
 }
