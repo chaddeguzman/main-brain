@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Publish local main commits to a review branch. GitHub Actions opens or updates
+# the pull request; protected main is never pushed directly.
+
+if [ "${SECOND_SELF_AUTO_PUBLISH:-1}" = "0" ]; then
+    exit 0
+fi
+
+current_branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0
+if [ "$current_branch" != "main" ]; then
+    exit 0
+fi
+
+remote="${SECOND_SELF_AUTO_PUBLISH_REMOTE:-origin}"
+publish_branch="${SECOND_SELF_AUTO_PUBLISH_BRANCH:-automation/main}"
+
+if ! git remote get-url "$remote" >/dev/null 2>&1; then
+    echo "Second Self auto-publish skipped: Git remote '$remote' does not exist." >&2
+    exit 0
+fi
+
+echo "Publishing the new commit to $remote/$publish_branch for pull-request review..."
+if git push "$remote" "HEAD:refs/heads/$publish_branch"; then
+    echo "Published successfully. GitHub will open or update the pull request."
+else
+    echo "Second Self auto-publish failed; the local commit is still safe." >&2
+    echo "Retry with: git push $remote HEAD:refs/heads/$publish_branch" >&2
+fi
+
+exit 0
