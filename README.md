@@ -99,3 +99,16 @@ Before committing or publishing changes, run:
 Review `git status` before every commit. Your Layer 1 content, project records,
 local configuration, caches, backups, and recovery history must remain
 untracked.
+
+## Protected Main Workflow
+
+The bootstrap-configured Git hooks preserve the protected `main` workflow:
+
+1. A commit on local `main` first passes the privacy validation hook.
+2. The post-commit hook pushes the commit to `automation/main`.
+3. GitHub Actions opens or updates a pull request into `main`.
+4. The pull request can be merged after the required `test` check passes.
+
+Set `SECOND_SELF_AUTO_PUBLISH=0` before committing to temporarily disable the
+automatic push. Commits made on any branch other than `main` are not
+automatically published.

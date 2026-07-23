@@ -1,3 +1,10 @@
 #!/bin/sh
-python -m second_self validate --privacy
 
+repo_root=$(git rev-parse --show-toplevel)
+if [ -n "${PYTHONPATH:-}" ]; then
+    export PYTHONPATH="$repo_root/90-system/app:$PYTHONPATH"
+else
+    export PYTHONPATH="$repo_root/90-system/app"
+fi
+
+python -m second_self validate --privacy

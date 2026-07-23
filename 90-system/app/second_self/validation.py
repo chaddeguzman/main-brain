@@ -21,6 +21,14 @@ IGNORED_TRACKED_PREFIXES = (
     ".second-self.local.json",
     ".second-self-cache/",
 )
+ALLOWED_PRIVATE_SCAFFOLD_FILES = {
+    "01-strategy-storage/00 Memory/.gitkeep",
+    "01-strategy-storage/01 Notes/.gitkeep",
+    "01-strategy-storage/02 Journal/.gitkeep",
+    "01-strategy-storage/03 Strategy/.gitkeep",
+    "01-strategy-storage/04 References/.gitkeep",
+    "01-strategy-storage/05 Reviews/.gitkeep",
+}
 
 
 def _tracked_files(repo: Path) -> list[Path]:
@@ -60,7 +68,10 @@ def validate(
     if privacy:
         for tracked in _tracked_files(paths.repo_root):
             relative = tracked.relative_to(paths.repo_root).as_posix()
-            if relative.startswith(IGNORED_TRACKED_PREFIXES):
+            if (
+                relative.startswith(IGNORED_TRACKED_PREFIXES)
+                and relative not in ALLOWED_PRIVATE_SCAFFOLD_FILES
+            ):
                 errors.append(f"private/runtime path is tracked: {relative}")
                 continue
             if not tracked.is_file() or tracked.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif"}:
