@@ -21,7 +21,10 @@ if ! git remote get-url "$remote" >/dev/null 2>&1; then
 fi
 
 echo "Publishing the new commit to $remote/$publish_branch for pull-request review..."
-if git push "$remote" "HEAD:refs/heads/$publish_branch"; then
+if git push \
+    --force-with-lease="refs/heads/$publish_branch" \
+    "$remote" \
+    "HEAD:refs/heads/$publish_branch"; then
     echo "Published successfully. GitHub will open or update the pull request."
 else
     echo "Second Self auto-publish failed; the local commit is still safe." >&2

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -58,3 +59,20 @@ def test_delete_moves_to_private_trash(second_self: SecondSelfPaths) -> None:
     assert not target.exists()
     assert list(second_self.trash.rglob("Disposable.md"))
 
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows junction behavior")
+def test_two_stage_layer1_assembly(second_self: SecondSelfPaths) -> None:
+    scaffold = second_self.repo_root / "01-strategy-storage"
+    memory = scaffold / "00 Memory"
+    memory.mkdir(parents=True)
+    (memory / ".gitkeep").write_text("", encoding="utf-8")
+    private_memory = second_self.layer1 / "00 Memory"
+    private_memory.mkdir(parents=True)
+    (private_memory / "Private.md").write_text("private", encoding="utf-8")
+
+    proposal = propose(second_self, {"operation": "assemble_layer1"})
+    approve_intent(second_self, proposal["id"], f"APPROVE INTENT {proposal['id']}")
+    approve_exact(second_self, proposal["id"], f"APPLY {proposal['id']}", agent="pytest")
+
+    assert os.path.isjunction(scaffold)
+    assert (scaffold / "00 Memory" / "Private.md").read_text(encoding="utf-8") == "private"

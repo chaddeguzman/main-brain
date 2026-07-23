@@ -36,7 +36,7 @@ def _command_validate(args: argparse.Namespace) -> int:
     errors = validate(
         load_paths(require_config=require_config),
         privacy=args.privacy,
-        check_private=CONFIG_PATH.exists(),
+        check_private=CONFIG_PATH.exists() and not args.tracked_only,
     )
     if errors:
         _print({"valid": False, "errors": errors})
@@ -99,6 +99,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     check = sub.add_parser("validate")
     check.add_argument("--privacy", action="store_true")
+    check.add_argument(
+        "--tracked-only",
+        action="store_true",
+        help="skip private-note schema checks and validate tracked repository privacy only",
+    )
     check.set_defaults(func=_command_validate)
 
     capture = sub.add_parser("capture")

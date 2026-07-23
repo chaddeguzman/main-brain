@@ -7,4 +7,4 @@ else
     export PYTHONPATH="$repo_root/90-system/app"
 fi
 
-python -m second_self validate --privacy
+python -m second_self validate --privacy --tracked-only

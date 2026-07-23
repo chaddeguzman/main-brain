@@ -3,7 +3,9 @@ from __future__ import annotations
 import difflib
 import hashlib
 import json
+import os
 import shutil
+import subprocess
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -12,13 +14,39 @@ from typing import Any
 from .paths import SecondSelfPaths, resolve_private_path
 
 
-ALLOWED_OPERATIONS = {"edit", "migration", "delete", "move", "export"}
+ALLOWED_OPERATIONS = {
+    "edit",
+    "migration",
+    "delete",
+    "move",
+    "export",
+    "assemble_layer1",
+}
+LAYER1_SCAFFOLD_FILES = (
+    "00 Memory/.gitkeep",
+    "01 Notes/.gitkeep",
+    "02 Journal/.gitkeep",
+    "03 Strategy/.gitkeep",
+    "04 References/.gitkeep",
+    "05 Reviews/.gitkeep",
+)
 
 
 def _hash(path: Path) -> str | None:
     if not path.exists():
         return None
     digest = hashlib.sha256()
+    if path.is_dir():
+        for child in sorted(path.rglob("*"), key=lambda item: item.as_posix()):
+            relative = child.relative_to(path).as_posix()
+            digest.update(relative.encode("utf-8"))
+            digest.update(b"\0")
+            if child.is_file():
+                with child.open("rb") as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b""):
+                        digest.update(block)
+            digest.update(b"\0")
+        return digest.hexdigest()
     with path.open("rb") as stream:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
@@ -39,6 +67,11 @@ def _affected(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[Pat
         return [resolve_private_path(paths, item["from"]) for item in specification["moves"]]
     if operation == "export":
         return [resolve_private_path(paths, value) for value in specification.get("sources", [])]
+    if operation == "assemble_layer1":
+        return [
+            paths.repo_root / "01-strategy-storage",
+            *[paths.layer1 / value for value in LAYER1_SCAFFOLD_FILES],
+        ]
     raise ValueError(f"Unsupported operation: {operation}")
 
 
@@ -60,7 +93,79 @@ def _exact_preview(paths: SecondSelfPaths, specification: dict[str, Any]) -> str
                 )
             )
         return "\n".join(chunks)
+    if operation == "assemble_layer1":
+        return json.dumps(
+            {
+                "operation": operation,
+                "replace": "01-strategy-storage scaffold",
+                "with": "junction to configured private Layer 1",
+                "preserve_tracked_files": list(LAYER1_SCAFFOLD_FILES),
+            },
+            indent=2,
+        )
     return json.dumps(specification, indent=2)
+
+
+def _assemble_layer1(paths: SecondSelfPaths) -> list[str]:
+    scaffold = paths.repo_root / "01-strategy-storage"
+    target = paths.layer1.resolve()
+    pending = paths.repo_root / ".second-self-layer1-junction.pending"
+
+    if os.name != "nt":
+        raise RuntimeError("Layer 1 junction assembly is supported only on Windows.")
+    if not target.is_dir():
+        raise FileNotFoundError(target)
+    if os.path.isjunction(scaffold):
+        if scaffold.resolve() != target:
+            raise RuntimeError("Layer 1 already points to a different junction target.")
+        return []
+    if not scaffold.is_dir():
+        raise FileNotFoundError(scaffold)
+    if pending.exists() or os.path.isjunction(pending):
+        raise FileExistsError(pending)
+
+    existing_files = {
+        item.relative_to(scaffold).as_posix()
+        for item in scaffold.rglob("*")
+        if item.is_file()
+    }
+    unexpected = existing_files.difference(LAYER1_SCAFFOLD_FILES)
+    if unexpected:
+        raise RuntimeError(
+            "Layer 1 scaffold contains unexpected files: "
+            + ", ".join(sorted(unexpected))
+        )
+
+    for relative in LAYER1_SCAFFOLD_FILES:
+        source = scaffold / relative
+        destination = target / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if source.exists() and not destination.exists():
+            shutil.copy2(source, destination)
+
+    try:
+        subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J", str(pending), str(target)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        shutil.rmtree(scaffold)
+        pending.rename(scaffold)
+    except Exception:
+        if os.path.isjunction(pending):
+            pending.rmdir()
+        if not scaffold.exists():
+            scaffold.mkdir()
+            for relative in LAYER1_SCAFFOLD_FILES:
+                source = target / relative
+                destination = scaffold / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                if source.exists():
+                    shutil.copy2(source, destination)
+        raise
+
+    return [str(scaffold), str(target)]
 
 
 def propose(paths: SecondSelfPaths, specification: dict[str, Any]) -> dict[str, Any]:
@@ -152,6 +257,8 @@ def _apply(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[str]:
             raise FileExistsError(destination)
         destination.write_text(specification["content"], encoding="utf-8")
         changed.append(str(destination))
+    elif operation == "assemble_layer1":
+        changed.extend(_assemble_layer1(paths))
     return changed
 
 
@@ -183,4 +290,3 @@ def approve_exact(
     with (paths.audit / "agent-edits.jsonl").open("a", encoding="utf-8") as stream:
         stream.write(json.dumps(event) + "\n")
     return proposal
-
