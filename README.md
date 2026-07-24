@@ -73,6 +73,11 @@ reviewed processing transaction, the original source moves to the immutable
 `01-strategy-storage/01 Notes/99 Processed` archive and the wiki receives
 traceable derived pages.
 
+After processing, the user may choose to keep a source in `99 Processed` or
+relocate it to a specific subfolder under `04 References`. Relocation is a
+separate reviewed move, and the wiki source page is updated afterward so its
+provenance link follows the source.
+
 ### System Area
 
 `90-system` contains the technical machinery:

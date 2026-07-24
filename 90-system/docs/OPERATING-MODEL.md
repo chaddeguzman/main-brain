@@ -50,3 +50,9 @@ promote an interpretation into confirmed personal memory.
 Wiki processing is explicit. The broker binds the exact source hashes, page
 diffs, and archive moves into a journaled transaction. Interrupted transactions
 must be recovered before more sources are processed.
+
+Sources are always archived through `wiki_process` before any optional
+relocation. After processing, the user chooses whether each source remains in
+`01 Notes/99 Processed` or moves to a specific `04 References` subfolder. Such
+relocation uses a separate protected move proposal, followed by a reviewed wiki
+source-page update so provenance paths remain accurate.

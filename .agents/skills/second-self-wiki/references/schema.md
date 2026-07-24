@@ -81,3 +81,13 @@ Use:
 The broker limits a proposal to ten moved source units, verifies input hashes,
 validates generated pages, journals the transaction, and rolls back synchronous
 failures.
+
+## Post-archive reference relocation
+
+`wiki_process` always moves sources from Raw to `01 Notes/99 Processed` first.
+If the user wants a finished source retained as a reference, ask whether it
+should remain in Processed or move to a specific `04 References` subfolder.
+Use a separate protected `move` proposal for that relocation; do not bypass the
+Raw-to-Processed archive step. After the move is applied, update the affected
+wiki source page's `source_path` through a follow-up reviewed `wiki_process`
+proposal. Keep the source ID and hash unchanged.

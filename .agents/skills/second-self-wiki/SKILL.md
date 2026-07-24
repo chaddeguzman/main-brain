@@ -18,8 +18,14 @@ Read `references/schema.md` before proposing wiki changes.
 7. Submit one `wiki_process` broker proposal. Do not write wiki pages or move sources directly.
 8. Show intent and affected paths. After intent approval, show the exact diff and move manifest. Apply only after exact approval.
 9. Run `python -m second_self wiki lint` and report the archived paths, pages changed, conflicts, and warnings.
+10. After successful processing, ask whether each archived source should remain in `01 Notes/99 Processed` or be relocated to a specific subfolder under `04 References`. Never move a source directly from Raw into References.
+11. If relocation is requested, prepare a separate protected `move` proposal with the exact current Processed path and requested References destination. After that move is approved and applied, update the wiki source page's `source_path` in a follow-up reviewed `wiki_process` proposal so links remain accurate.
 
 Archive successfully reviewed duplicates with a duplicate log entry but no redundant synthesis. Keep failed, unsupported, incomplete, or unapproved units in Raw.
+
+Post-archive relocation is optional. The user must choose whether a source stays
+in the immutable Processed archive or moves to `04 References`, including the
+destination subfolder (for example, `04 References/04 docs`).
 
 ## Query
 
