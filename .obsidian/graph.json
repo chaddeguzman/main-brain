@@ -1,0 +1,87 @@
+{
+  "collapse-filter": true,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "path:\"01-strategy-storage/00 Memory\"",
+      "color": { "a": 1, "rgb": 3026478 }
+    },
+    {
+      "query": "path:\"01-strategy-storage/01 Notes\"",
+      "color": { "a": 1, "rgb": 3050327 }
+    },
+    {
+      "query": "path:\"01-strategy-storage/02 Journal\"",
+      "color": { "a": 1, "rgb": 10920836 }
+    },
+    {
+      "query": "path:\"01-strategy-storage/03 Strategy\"",
+      "color": { "a": 1, "rgb": 7798784 }
+    },
+    {
+      "query": "path:\"01-strategy-storage/04 References\"",
+      "color": { "a": 1, "rgb": 2061822 }
+    },
+    {
+      "query": "path:\"01-strategy-storage/05 Reviews\"",
+      "color": { "a": 1, "rgb": 10128698 }
+    },
+    {
+      "query": "path:\"02-skills-projects/skills\"",
+      "color": { "a": 1, "rgb": 2478840 }
+    },
+    {
+      "query": "path:\"02-skills-projects/projects\"",
+      "color": { "a": 1, "rgb": 14733178 }
+    },
+    {
+      "query": "path:\"03-wiki/sources\"",
+      "color": { "a": 1, "rgb": 4802889 }
+    },
+    {
+      "query": "path:\"03-wiki/topics\"",
+      "color": { "a": 1, "rgb": 4566186 }
+    },
+    {
+      "query": "path:\"03-wiki/entities\"",
+      "color": { "a": 1, "rgb": 7545251 }
+    },
+    {
+      "query": "path:\"03-wiki/analyses\"",
+      "color": { "a": 1, "rgb": 10229236 }
+    },
+    {
+      "query": "path:\"03-wiki/open-questions\"",
+      "color": { "a": 1, "rgb": 13158600 }
+    },
+    {
+      "query": "path:\"03-wiki\"",
+      "color": { "a": 1, "rgb": 6710886 }
+    },
+    {
+      "query": "path:\"02-skills-projects\"",
+      "color": { "a": 1, "rgb": 6316128 }
+    },
+    {
+      "query": "path:\"01-strategy-storage\"",
+      "color": { "a": 1, "rgb": 8421504 }
+    }
+  ],
+  "collapse-display": true,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 1,
+  "close": false
+}
