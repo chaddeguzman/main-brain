@@ -14,7 +14,7 @@ Read `references/schema.md` before proposing wiki changes.
 3. Hash and read each source. Inspect PNG, JPG, or WebP sources visually. Never invent missing extraction or OCR.
 4. Read `03-wiki/index.md`, then only relevant source, topic, entity, analysis, and primary Second Self pages.
 5. Distinguish direct evidence, derived interpretation, conflicts, and missing information. Never use a generated page as the sole basis for a consequential personal claim.
-6. Prepare complete page contents, index changes, one append-only log entry, open-question changes, and Raw-to-Processed moves. Use stable source IDs and final Processed paths.
+6. Prepare complete page contents, index changes, one append-only log entry, open-question changes, and Raw-to-Processed moves. Archive each source directly under `99 Processed` as `YYYYMMDD_HHMMSS+OriginalName.ext`; never create year or date subfolders. Use stable source IDs and final Processed paths.
 7. Submit one `wiki_process` broker proposal. Do not write wiki pages or move sources directly.
 8. Show intent, affected paths, the exact diff, and the move manifest together. Apply after one `Y` or `Yes`; reject after one `N` or `No`. Never request an approval phrase, proposal ID, timestamp, or second approval.
 9. Run `python -m second_self wiki lint` and report the archived paths, pages changed, conflicts, and warnings.
@@ -38,3 +38,7 @@ Only file a conversational result when the user explicitly asks. Create or updat
 ## Maintain
 
 Run structural lint before semantic review. Check contradictions, stale synthesis, candidate entity duplicates, missing source coverage, and meaningful orphans. Put uncertain merges and renames in `open-questions.md`; never merge entities or rename archived sources automatically.
+
+Flatten legacy year/date archive paths through one reviewed `wiki_process`
+transaction that moves each source directly into `99 Processed` and updates its
+wiki `source_path` together.

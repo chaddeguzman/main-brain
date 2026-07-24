@@ -73,7 +73,7 @@ Use:
   "changes": [{"path": "03-wiki/...", "content": "..."}],
   "moves": [{
     "from": "01-strategy-storage/01 Notes/00 Raw/...",
-    "to": "01-strategy-storage/01 Notes/99 Processed/YYYY/YYYY-MM-DD/<hash>-..."
+    "to": "01-strategy-storage/01 Notes/99 Processed/YYYYMMDD_HHMMSS+OriginalName.ext"
   }]
 }
 ```
@@ -81,6 +81,12 @@ Use:
 The broker limits a proposal to ten moved source units, verifies input hashes,
 validates generated pages, journals the transaction, and rolls back synchronous
 failures.
+
+Keep `99 Processed` flat. Preserve the original source name and extension after
+the processing timestamp. Add a minimal numeric suffix only when names collide.
+For legacy nested archives, use one `wiki_process` transaction containing the
+Processed-to-Processed move and the matching source-page path update. The broker
+removes emptied legacy date folders after the transaction succeeds.
 
 ## Post-archive reference relocation
 

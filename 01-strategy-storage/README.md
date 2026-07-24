@@ -34,8 +34,10 @@ Two ordered support folders implement the LLM Wiki source lifecycle:
 - `00 Raw` is the pending queue for quick captures, documents, Markdown,
   screenshots, images, and attachment bundles.
 - `99 Processed` is the immutable archive for sources that completed a
-  reviewed wiki transaction. Corrections enter Raw as a new revision rather
-  than changing an archived source.
+  reviewed wiki transaction. Keep it flat: archive sources directly in this
+  folder as `YYYYMMDD_HHMMSS+OriginalName.ext`, without year or date
+  subfolders. Corrections enter Raw as a new revision rather than changing an
+  archived source.
 
 ### `02 Journal`
 
