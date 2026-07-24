@@ -6,6 +6,18 @@
 03-wiki/*
 !03-wiki/.gitkeep
 !03-wiki/README.md
+!03-wiki/analyses/
+03-wiki/analyses/*
+!03-wiki/analyses/.gitkeep
+!03-wiki/entities/
+03-wiki/entities/*
+!03-wiki/entities/.gitkeep
+!03-wiki/sources/
+03-wiki/sources/*
+!03-wiki/sources/.gitkeep
+!03-wiki/topics/
+03-wiki/topics/*
+!03-wiki/topics/.gitkeep
 
 # Track only the empty user-facing Layer 1 folder scaffold. All private
 # contents and system-managed Layer 1 folders remain ignored.
