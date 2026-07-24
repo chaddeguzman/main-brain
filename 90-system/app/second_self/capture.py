@@ -59,7 +59,7 @@ def capture_note(
 ) -> CapturedNote:
     title, body = _validate(title, body, require_body)
     created_at = (now or datetime.now().astimezone()).replace(microsecond=0)
-    inbox = paths.layer1 / "00-inbox"
+    inbox = paths.raw
     inbox.mkdir(parents=True, exist_ok=True)
 
     content = (

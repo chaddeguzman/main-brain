@@ -16,6 +16,7 @@ and excluded from Git.
 | --- | --- | --- |
 | `01-strategy-storage` | Private notes, journals, strategy, references, and reviews | You and your agents |
 | `02-skills-projects` | Reusable skills and project context | You and your agents |
+| `03-wiki` | Private LLM-maintained synthesis and knowledge links | Trusted agents |
 | `90-system` | Application code, automation, technical documentation, migrations, and tests | Agents and developers |
 
 Your normal work belongs in Layers 1 and 2. You should not need to edit
@@ -44,6 +45,18 @@ not alongside your core folders.
 `02-skills-projects` contains reusable agent skills and private project records.
 Skills are versioned in Git. The `projects` folder is private and excluded from
 GitHub.
+
+### LLM Wiki
+
+`01-strategy-storage/01 Notes/00 Raw` is the pending source queue.
+Successfully reviewed sources move into the immutable
+`01-strategy-storage/01 Notes/99 Processed` archive. The private root
+`03-wiki` contains agent-generated source summaries, topics, entities,
+analyses, an index, an append-only log, and open questions.
+
+Existing Memory, Notes, Journal, Strategy, References, Reviews, and registered
+project records remain in place. Wiki pages help navigate and synthesize that
+evidence but do not replace it.
 
 ### System
 
@@ -211,6 +224,10 @@ access.
 .\90-system\automation\scripts\second-self.ps1 web
 .\90-system\automation\scripts\second-self.ps1 ingest "C:\path\document.pdf"
 .\90-system\automation\scripts\second-self.ps1 indexes
+python -m second_self wiki init
+python -m second_self wiki add "C:\path\source.pdf"
+python -m second_self wiki status
+python -m second_self wiki lint
 .\90-system\automation\scripts\second-self.ps1 register-project "C:\path\project" --name "Project Name"
 .\90-system\automation\scripts\backup.ps1 -Destination "E:\SecondSelfBackups"
 .\90-system\automation\scripts\restore.ps1 -Archive "E:\SecondSelfBackups\second-self-....tar.age" -Destination "C:\restore"

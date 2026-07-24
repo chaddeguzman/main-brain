@@ -1,7 +1,8 @@
 # System
 
 This folder contains Second Self internals maintained by agents and developers.
-Users should work in `01-strategy-storage` and `02-skills-projects`.
+Users work in `01-strategy-storage`, `02-skills-projects`, and the private
+agent-maintained `03-wiki`.
 
 - `app`: Python package
 - `automation`: scripts and hooks

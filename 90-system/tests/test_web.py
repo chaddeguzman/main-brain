@@ -96,7 +96,7 @@ def test_capture_requires_csrf_and_redirects_to_verified_preview(tmp_path: Path)
     assert b"Never logged" not in rejected.data
     assert response.status_code == 303
     assert response.headers["Location"].startswith("/view/")
-    notes = list((paths.layer1 / "00-inbox").glob("*.md"))
+    notes = list(paths.raw.glob("*.md"))
     assert len(notes) == 1
     assert "Body preserved exactly.\n" in notes[0].read_text(encoding="utf-8")
 

@@ -95,3 +95,32 @@ def test_projects_placeholder_is_public_but_project_contents_are_rejected(
         "private/runtime path is tracked: "
         "02-skills-projects/projects/example/private.md"
     ]
+
+
+def test_wiki_placeholder_is_public_but_generated_pages_are_rejected(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "repo"
+    data = tmp_path / "data"
+    wiki = repo / "03-wiki"
+    wiki.mkdir(parents=True)
+    data.mkdir()
+    placeholder = wiki / ".gitkeep"
+    placeholder.touch()
+    private_page = wiki / "topics" / "private.md"
+    private_page.parent.mkdir()
+    private_page.write_text("# Private synthesis\n", encoding="utf-8")
+    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "add", "--", str(placeholder), str(private_page)],
+        check=True,
+        capture_output=True,
+    )
+
+    errors = validate(
+        SecondSelfPaths(repo_root=repo, data_root=data),
+        privacy=True,
+        check_private=False,
+    )
+
+    assert errors == ["private/runtime path is tracked: 03-wiki/topics/private.md"]

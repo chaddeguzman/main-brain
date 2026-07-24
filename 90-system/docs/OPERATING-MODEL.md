@@ -35,3 +35,18 @@ explicitly registered, trusted local project agents receive Second Self adapters
 Session startup uses compact current-view and index notes. Use metadata indexes
 and text search for deeper retrieval. Do not load the entire archive into a
 prompt. Consequential responses cite the relevant private note and date.
+
+## LLM Wiki
+
+The wiki is a persistent derived navigation layer between questions and primary
+sources. Raw items wait under `01 Notes/00 Raw`; a reviewed transaction creates
+or updates interlinked Markdown and archives successful sources under
+`01 Notes/99 Processed`. Existing curated evidence stays in place.
+
+Generated pages always remain derived. They must trace material claims to
+archived or in-place evidence, preserve disagreement, and never silently
+promote an interpretation into confirmed personal memory.
+
+Wiki processing is explicit. The broker binds the exact source hashes, page
+diffs, and archive moves into a journaled transaction. Interrupted transactions
+must be recovered before more sources are processed.

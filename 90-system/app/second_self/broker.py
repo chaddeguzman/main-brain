@@ -21,6 +21,7 @@ ALLOWED_OPERATIONS = {
     "move",
     "export",
     "assemble_layer1",
+    "wiki_process",
 }
 LAYER1_SCAFFOLD_FILES = (
     "00 Memory/.gitkeep",
@@ -59,8 +60,17 @@ def _proposal_path(paths: SecondSelfPaths, proposal_id: str) -> Path:
 
 def _affected(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[Path]:
     operation = specification["operation"]
-    if operation in {"edit", "migration"}:
-        return [resolve_private_path(paths, item["path"]) for item in specification["changes"]]
+    if operation in {"edit", "migration", "wiki_process"}:
+        affected = [
+            resolve_private_path(paths, item["path"])
+            for item in specification.get("changes", [])
+        ]
+        if operation == "wiki_process":
+            affected.extend(
+                resolve_private_path(paths, item["from"])
+                for item in specification.get("moves", [])
+            )
+        return affected
     if operation == "delete":
         return [resolve_private_path(paths, value) for value in specification["paths"]]
     if operation == "move":
@@ -77,9 +87,9 @@ def _affected(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[Pat
 
 def _exact_preview(paths: SecondSelfPaths, specification: dict[str, Any]) -> str:
     operation = specification["operation"]
-    if operation in {"edit", "migration"}:
+    if operation in {"edit", "migration", "wiki_process"}:
         chunks: list[str] = []
-        for item in specification["changes"]:
+        for item in specification.get("changes", []):
             path = resolve_private_path(paths, item["path"])
             old = path.read_text(encoding="utf-8") if path.exists() else ""
             new = item["content"]
@@ -91,6 +101,14 @@ def _exact_preview(paths: SecondSelfPaths, specification: dict[str, Any]) -> str
                     tofile=str(path),
                     lineterm="",
                 )
+            )
+        if operation == "wiki_process":
+            chunks.extend(
+                [
+                    "",
+                    "## Source archive moves",
+                    json.dumps(specification.get("moves", []), indent=2),
+                ]
             )
         return "\n".join(chunks)
     if operation == "assemble_layer1":
@@ -218,7 +236,167 @@ def _check_stale(proposal: dict[str, Any]) -> None:
             )
 
 
-def _apply(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[str]:
+def _write_journal(path: Path, journal: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(journal, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def _rollback_wiki_transaction(
+    paths: SecondSelfPaths, stage: Path, journal: dict[str, Any]
+) -> None:
+    for move in reversed(journal.get("moves", [])):
+        source = resolve_private_path(paths, move["from"])
+        destination = resolve_private_path(paths, move["to"])
+        if destination.exists() and not source.exists():
+            source.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(destination), source)
+    for change in reversed(journal.get("changes", [])):
+        target = resolve_private_path(paths, change["path"])
+        backup = stage / change["backup"]
+        expected = change.get("expected_hash")
+        if target.exists() and expected and _hash(target) not in {
+            expected,
+            _hash(backup) if backup.exists() else None,
+        }:
+            raise RuntimeError(
+                f"Refusing recovery because {change['path']} has unrelated content"
+            )
+        if change["existed"] and backup.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(backup, target)
+        elif (
+            not change["existed"]
+            and target.exists()
+            and (not expected or _hash(target) == expected)
+        ):
+            target.unlink()
+
+
+def _apply_wiki_process(
+    paths: SecondSelfPaths,
+    specification: dict[str, Any],
+    proposal_id: str,
+) -> list[str]:
+    from .wiki import validate_wiki_change_set
+
+    changes = specification.get("changes", [])
+    moves = specification.get("moves", [])
+    if not changes:
+        raise ValueError("wiki_process requires at least one wiki change")
+    if len(moves) > 10:
+        raise ValueError("wiki_process supports at most ten source units")
+
+    if paths.wiki_transactions.exists():
+        for existing in paths.wiki_transactions.glob("*/journal.json"):
+            payload = json.loads(existing.read_text(encoding="utf-8"))
+            if payload.get("status") in {"staging", "applying"}:
+                raise RuntimeError(
+                    f"Recover interrupted wiki transaction {payload.get('id', existing.parent.name)} first"
+                )
+
+    stage = paths.wiki_transactions / proposal_id
+    if stage.exists():
+        raise FileExistsError(f"Transaction staging already exists: {proposal_id}")
+    (stage / "new").mkdir(parents=True)
+    (stage / "backups").mkdir()
+    journal_path = stage / "journal.json"
+    journal: dict[str, Any] = {
+        "id": proposal_id,
+        "status": "staging",
+        "changes": [],
+        "moves": [{**item, "applied": False} for item in moves],
+    }
+
+    for index, item in enumerate(changes):
+        target = resolve_private_path(paths, item["path"])
+        try:
+            target.relative_to(paths.wiki.resolve())
+        except ValueError as exc:
+            raise ValueError(f"Wiki change escapes 03-wiki: {item['path']}") from exc
+        staged = stage / "new" / f"{index}.md"
+        staged.write_text(item["content"], encoding="utf-8")
+        backup = stage / "backups" / f"{index}.md"
+        existed = target.exists()
+        if existed:
+            shutil.copy2(target, backup)
+        journal["changes"].append(
+            {
+                "path": str(target.relative_to(paths.data_root).as_posix()),
+                "staged": str(staged.relative_to(stage).as_posix()),
+                "backup": str(backup.relative_to(stage).as_posix()),
+                "existed": existed,
+                "expected_hash": _hash(staged),
+                "applied": False,
+            }
+        )
+
+    for item in moves:
+        source = resolve_private_path(paths, item["from"])
+        destination = resolve_private_path(paths, item["to"])
+        try:
+            source.relative_to(paths.raw.resolve())
+            destination.relative_to(paths.processed.resolve())
+        except ValueError as exc:
+            raise ValueError("wiki_process moves must be Raw -> Processed") from exc
+        if not source.exists():
+            raise FileNotFoundError(source)
+        if destination.exists():
+            raise FileExistsError(destination)
+
+    validate_wiki_change_set(paths, changes)
+    _write_journal(journal_path, journal)
+    changed: list[str] = []
+    try:
+        journal["status"] = "applying"
+        _write_journal(journal_path, journal)
+        for record in journal["changes"]:
+            target = resolve_private_path(paths, record["path"])
+            staged = stage / record["staged"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(staged, target)
+            record["applied"] = True
+            _write_journal(journal_path, journal)
+            changed.append(str(target))
+        for item in journal["moves"]:
+            source = resolve_private_path(paths, item["from"])
+            destination = resolve_private_path(paths, item["to"])
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(source), destination)
+            item["applied"] = True
+            _write_journal(journal_path, journal)
+            changed.extend([str(source), str(destination)])
+        journal["status"] = "committed"
+        _write_journal(journal_path, journal)
+        return changed
+    except Exception:
+        _rollback_wiki_transaction(paths, stage, journal)
+        journal["status"] = "rolled-back"
+        _write_journal(journal_path, journal)
+        raise
+
+
+def recover_wiki_transactions(paths: SecondSelfPaths) -> list[str]:
+    recovered: list[str] = []
+    if not paths.wiki_transactions.exists():
+        return recovered
+    for journal_path in sorted(paths.wiki_transactions.glob("*/journal.json")):
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+        if journal.get("status") not in {"staging", "applying"}:
+            continue
+        _rollback_wiki_transaction(paths, journal_path.parent, journal)
+        journal["status"] = "rolled-back"
+        _write_journal(journal_path, journal)
+        recovered.append(str(journal.get("id", journal_path.parent.name)))
+    return recovered
+
+
+def _apply(
+    paths: SecondSelfPaths,
+    specification: dict[str, Any],
+    proposal_id: str,
+) -> list[str]:
     operation = specification["operation"]
     changed: list[str] = []
     if operation in {"edit", "migration"}:
@@ -259,6 +437,8 @@ def _apply(paths: SecondSelfPaths, specification: dict[str, Any]) -> list[str]:
         changed.append(str(destination))
     elif operation == "assemble_layer1":
         changed.extend(_assemble_layer1(paths))
+    elif operation == "wiki_process":
+        changed.extend(_apply_wiki_process(paths, specification, proposal_id))
     return changed
 
 
@@ -272,7 +452,23 @@ def approve_exact(
     if proposal["status"] != "exact-pending":
         raise ValueError(f"Proposal status is {proposal['status']}")
     _check_stale(proposal)
-    changed = _apply(paths, proposal["specification"])
+    operation = proposal["specification"]["operation"]
+    lock: Path | None = None
+    lock_handle: int | None = None
+    if operation == "wiki_process":
+        paths.wiki_transactions.mkdir(parents=True, exist_ok=True)
+        lock = paths.wiki_transactions / ".processing.lock"
+        try:
+            lock_handle = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError as exc:
+            raise RuntimeError("Another wiki transaction is already active") from exc
+    try:
+        changed = _apply(paths, proposal["specification"], proposal_id)
+    finally:
+        if lock_handle is not None:
+            os.close(lock_handle)
+        if lock is not None and lock.exists():
+            lock.unlink()
     proposal["status"] = "applied"
     proposal["applied"] = datetime.now().astimezone().isoformat()
     proposal["changed_paths"] = changed
@@ -284,7 +480,14 @@ def approve_exact(
         "time": proposal["applied"],
         "agent": agent,
         "action": proposal["specification"]["operation"],
-        "paths": changed,
+        "paths": [
+            (
+                Path(value).resolve().relative_to(paths.data_root.resolve()).as_posix()
+                if Path(value).resolve().is_relative_to(paths.data_root.resolve())
+                else Path(value).name
+            )
+            for value in changed
+        ],
         "approval": proposal_id,
     }
     with (paths.audit / "agent-edits.jsonl").open("a", encoding="utf-8") as stream:

@@ -24,6 +24,7 @@ def main() -> None:
         data_root.lower().replace("/", "\\"),
         "01-strategy-storage",
         "02-skills-projects\\projects",
+        "03-wiki",
     ]
     if not any(marker in lower for marker in private_markers):
         return

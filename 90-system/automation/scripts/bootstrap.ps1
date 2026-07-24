@@ -68,6 +68,7 @@ if ($LASTEXITCODE -ne 0) {
 $Links = @{
     (Join-Path $RepoRoot "01-strategy-storage") = (Join-Path $DataRoot "01-strategy-storage")
     (Join-Path $RepoRoot "02-skills-projects\projects") = (Join-Path $DataRoot "02-skills-projects\projects")
+    (Join-Path $RepoRoot "03-wiki") = (Join-Path $DataRoot "03-wiki")
 }
 $Layer1ScaffoldFiles = @(
     "00 Memory\.gitkeep",
@@ -77,6 +78,7 @@ $Layer1ScaffoldFiles = @(
     "04 References\.gitkeep",
     "05 Reviews\.gitkeep"
 )
+$WikiScaffoldFiles = @(".gitkeep")
 foreach ($entry in $Links.GetEnumerator()) {
     if (Test-Path -LiteralPath $entry.Key) {
         $item = Get-Item -LiteralPath $entry.Key -Force
@@ -99,6 +101,27 @@ foreach ($entry in $Links.GetEnumerator()) {
             else {
                 throw "Refusing to replace Layer 1 scaffold containing user files: $($unexpectedFiles -join ', ')"
             }
+        }
+        elseif ($entry.Key -eq (Join-Path $RepoRoot "03-wiki")) {
+            $existingFiles = @(
+                Get-ChildItem -LiteralPath $entry.Key -File -Recurse -Force |
+                    ForEach-Object {
+                        [IO.Path]::GetRelativePath($entry.Key, $_.FullName)
+                    }
+            )
+            $unexpectedFiles = @(
+                $existingFiles | Where-Object { $_ -notin $WikiScaffoldFiles }
+            )
+            if ($unexpectedFiles.Count -ne 0) {
+                throw "Refusing to replace wiki scaffold containing user files: $($unexpectedFiles -join ', ')"
+            }
+            $privateWiki = $entry.Value
+            New-Item -ItemType Directory -Force -Path $privateWiki | Out-Null
+            $wikiKeep = Join-Path $entry.Key ".gitkeep"
+            if (Test-Path -LiteralPath $wikiKeep) {
+                Copy-Item -LiteralPath $wikiKeep -Destination (Join-Path $privateWiki ".gitkeep") -Force
+            }
+            Remove-Item -LiteralPath $entry.Key -Recurse -Force
         }
         else {
             throw "Refusing to replace non-link path: $($entry.Key)"
