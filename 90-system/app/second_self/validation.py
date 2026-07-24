@@ -39,6 +39,10 @@ ALLOWED_PRIVATE_SCAFFOLD_FILES = {
     "02-skills-projects/projects/.gitkeep",
     "03-wiki/.gitkeep",
     "03-wiki/README.md",
+    "03-wiki/analyses/.gitkeep",
+    "03-wiki/entities/.gitkeep",
+    "03-wiki/sources/.gitkeep",
+    "03-wiki/topics/.gitkeep",
 }
 
 
