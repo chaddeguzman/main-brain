@@ -71,7 +71,8 @@ replacing the underlying evidence.
 New source material enters `01-strategy-storage/01 Notes/00 Raw`. After a
 reviewed processing transaction, the original source moves to the immutable
 `01-strategy-storage/01 Notes/99 Processed` archive and the wiki receives
-traceable derived pages.
+traceable derived pages. Processed remains a flat folder; archived sources use
+`YYYYMMDD_HHMMSS+OriginalName.ext` filenames instead of date subfolders.
 
 After processing, the user may choose to keep a source in `99 Processed` or
 relocate it to a specific subfolder under `04 References`. Relocation is a

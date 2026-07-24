@@ -263,6 +263,21 @@ def _write_journal(path: Path, journal: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+def _prune_empty_processed_parents(paths: SecondSelfPaths, start: Path) -> None:
+    processed = paths.processed.resolve()
+    current = start.resolve()
+    try:
+        current.relative_to(processed)
+    except ValueError:
+        return
+    while current != processed:
+        try:
+            current.rmdir()
+        except OSError:
+            return
+        current = current.parent
+
+
 def _rollback_wiki_transaction(
     paths: SecondSelfPaths, stage: Path, journal: dict[str, Any]
 ) -> None:
@@ -355,11 +370,23 @@ def _apply_wiki_process(
     for item in moves:
         source = resolve_private_path(paths, item["from"])
         destination = resolve_private_path(paths, item["to"])
+        raw_to_processed = False
+        processed_to_flat = False
         try:
             source.relative_to(paths.raw.resolve())
-            destination.relative_to(paths.processed.resolve())
-        except ValueError as exc:
-            raise ValueError("wiki_process moves must be Raw -> Processed") from exc
+            raw_to_processed = destination.parent == paths.processed.resolve()
+        except ValueError:
+            pass
+        try:
+            source.relative_to(paths.processed.resolve())
+            processed_to_flat = destination.parent == paths.processed.resolve()
+        except ValueError:
+            pass
+        if not (raw_to_processed or processed_to_flat):
+            raise ValueError(
+                "wiki_process moves must be Raw -> flat Processed or "
+                "nested Processed -> flat Processed"
+            )
         if not source.exists():
             raise FileNotFoundError(source)
         if destination.exists():
@@ -387,6 +414,9 @@ def _apply_wiki_process(
             item["applied"] = True
             _write_journal(journal_path, journal)
             changed.extend([str(source), str(destination)])
+        for item in journal["moves"]:
+            source = resolve_private_path(paths, item["from"])
+            _prune_empty_processed_parents(paths, source.parent)
         journal["status"] = "committed"
         _write_journal(journal_path, journal)
         return changed

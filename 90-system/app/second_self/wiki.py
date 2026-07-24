@@ -5,7 +5,7 @@ import os
 import re
 import shutil
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -327,34 +327,34 @@ def lint_wiki(paths: SecondSelfPaths) -> list[str]:
 def archive_destination(
     paths: SecondSelfPaths,
     source: Path,
-    source_id: str,
-    processed_on: date | None = None,
+    processed_at: datetime | None = None,
 ) -> Path:
-    processed_on = processed_on or date.today()
-    destination = (
-        paths.processed
-        / f"{processed_on:%Y}"
-        / processed_on.isoformat()
-        / f"{source_id[:12]}-{source.name}"
-    )
+    processed_at = processed_at or datetime.now().astimezone()
+    prefix = processed_at.strftime("%Y%m%d_%H%M%S")
+    destination = paths.processed / f"{prefix}+{source.name}"
     if not destination.exists():
         return destination
     counter = 2
     while True:
-        candidate = destination.with_name(f"{destination.name}-duplicate-{counter}")
+        if source.is_dir():
+            candidate = destination.with_name(f"{destination.name}+{counter}")
+        else:
+            candidate = destination.with_name(
+                f"{prefix}+{source.stem}+{counter}{source.suffix}"
+            )
         if not candidate.exists():
             return candidate
         counter += 1
 
 
 def processing_move(
-    paths: SecondSelfPaths, source: Path, processed_on: date | None = None
+    paths: SecondSelfPaths, source: Path, processed_at: datetime | None = None
 ) -> dict[str, str]:
     source = source.resolve()
     if not _inside(source, paths.raw):
         raise ValueError("Processing source must be inside 00 Raw")
     digest = source_hash(source)
-    destination = archive_destination(paths, source, digest, processed_on)
+    destination = archive_destination(paths, source, processed_at)
     return {
         "from": source.relative_to(paths.data_root).as_posix(),
         "to": destination.relative_to(paths.data_root).as_posix(),
