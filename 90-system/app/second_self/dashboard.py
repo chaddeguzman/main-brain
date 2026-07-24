@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 from .frontmatter import read_note
 from .paths import SecondSelfPaths
+from .wiki import wiki_status
 
 
 MAX_SCAN_FILES = 10_000
@@ -59,6 +60,7 @@ class DashboardSnapshot:
     legacy_excluded: int
     scan_errors: int
     scanned_files: int
+    wiki: dict[str, Any]
 
 
 @dataclass
@@ -152,6 +154,12 @@ def _scan_layer1(paths: SecondSelfPaths, result: _ScanResult) -> None:
                     name
                     for name in directories
                     if name.casefold() not in SKIPPED_LAYER1_DIRECTORIES
+                ]
+            elif tuple(part.casefold() for part in relative.parts) == (
+                "01 notes",
+            ):
+                directories[:] = [
+                    name for name in directories if name.casefold() != "99 processed"
                 ]
             elif (
                 len(relative.parts) == 1
@@ -393,4 +401,5 @@ def scan_dashboard(paths: SecondSelfPaths, today: date | None = None) -> Dashboa
         legacy_excluded=result.legacy_excluded,
         scan_errors=result.errors + int(root_error),
         scanned_files=result.scanned,
+        wiki=wiki_status(paths),
     )

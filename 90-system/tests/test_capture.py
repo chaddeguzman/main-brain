@@ -27,7 +27,7 @@ def test_capture_is_structured_and_preserves_body(second_self: SecondSelfPaths) 
     assert metadata["status"] == "inbox"
     assert metadata["source"] == "dashboard"
     assert content.endswith(body + "\n")
-    assert captured.path.parent == second_self.layer1 / "00-inbox"
+    assert captured.path.parent == second_self.raw
 
 
 def test_capture_rejects_invalid_web_input(second_self: SecondSelfPaths) -> None:
@@ -70,7 +70,7 @@ def test_failed_link_leaves_no_partial_capture(
     monkeypatch.setattr(capture_module.os, "link", fail_link)
     with pytest.raises(OSError, match="simulated"):
         capture_note(second_self, "Title", "Body", require_body=True)
-    inbox = second_self.layer1 / "00-inbox"
+    inbox = second_self.raw
     assert not list(inbox.glob("*.md"))
     assert not list(inbox.glob(".capture-*.tmp"))
 
@@ -87,7 +87,7 @@ def test_failed_verification_removes_final_capture(
     )
     with pytest.raises(RuntimeError, match="verification failed"):
         capture_note(second_self, "Title", "Body", require_body=True)
-    inbox = second_self.layer1 / "00-inbox"
+    inbox = second_self.raw
     assert not list(inbox.glob("*.md"))
     assert not list(inbox.glob(".capture-*.tmp"))
 

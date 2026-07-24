@@ -39,6 +39,10 @@ teach Codex or Claude how to perform specialized work.
 Skills are the capabilities used by the digital employee. They should describe
 repeatable methods rather than store private project data.
 
+`second-self-wiki` processes Raw sources, refreshes changed curated notes,
+queries linked knowledge with primary evidence, and performs structural or
+semantic wiki maintenance through protected broker proposals.
+
 ### `projects`
 
 Stores each user's local projects and their working context. A project may

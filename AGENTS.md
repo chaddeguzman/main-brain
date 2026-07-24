@@ -48,6 +48,18 @@
   perform project work; important outcomes and reusable lessons return through
   controlled writeback and review.
 
+## LLM Wiki
+
+- `01-strategy-storage/01 Notes/00 Raw` is the pending source queue.
+- `01-strategy-storage/01 Notes/99 Processed` is the immutable processed-source
+  archive. Corrections enter Raw as new revisions; never edit archived sources.
+- `03-wiki` is private, derived, and agent-maintained. Use the
+  `second-self-wiki` skill for processing, querying, saving analyses, or linting.
+- Wiki pages guide navigation but do not replace primary evidence. Consequential
+  personal claims must trace to Raw, Processed, or existing Second Self sources.
+- Semantic wiki changes and Raw-to-Processed moves require one reviewed
+  `wiki_process` broker transaction. Existing curated notes remain in place.
+
 ## Golden Rule: Main Must Stay Aligned
 
 - Use only the active repository's `main` branch for Second Self changes. Do

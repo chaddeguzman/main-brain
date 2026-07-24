@@ -26,7 +26,13 @@ DIRECTORIES = [
     "01-strategy-storage/90-indexes",
     "01-strategy-storage/98-trash",
     "01-strategy-storage/99-audit/proposals",
+    "01-strategy-storage/01 Notes/00 Raw",
+    "01-strategy-storage/01 Notes/99 Processed",
     "02-skills-projects/projects",
+    "03-wiki/sources",
+    "03-wiki/topics",
+    "03-wiki/entities",
+    "03-wiki/analyses",
 ]
 
 
@@ -135,6 +141,48 @@ related: []
 No projects registered.
 <!-- END GENERATED -->
 """,
+    "03-wiki/index.md": """---
+type: wiki-index
+created: {today}
+status: active
+verification: derived
+tags: []
+projects: []
+related: []
+---
+
+# Wiki Index
+
+<!-- BEGIN GENERATED -->
+No wiki pages have been processed.
+<!-- END GENERATED -->
+""",
+    "03-wiki/log.md": """---
+type: wiki-log
+created: {today}
+status: active
+verification: derived
+tags: []
+projects: []
+related: []
+---
+
+# Wiki Log
+""",
+    "03-wiki/open-questions.md": """---
+type: wiki-open-questions
+created: {today}
+status: active
+verification: derived
+tags: []
+projects: []
+related: []
+---
+
+# Open Questions
+
+No open questions recorded.
+""",
 }
 
 
@@ -155,4 +203,27 @@ def scaffold(paths: SecondSelfPaths) -> list[Path]:
     if not schema.exists():
         schema.write_text("1\n", encoding="ascii")
         created.append(schema)
+    return created
+
+
+def scaffold_wiki(paths: SecondSelfPaths) -> list[Path]:
+    created: list[Path] = []
+    directories = [
+        paths.raw,
+        paths.processed,
+        paths.wiki / "sources",
+        paths.wiki / "topics",
+        paths.wiki / "entities",
+        paths.wiki / "analyses",
+    ]
+    for path in directories:
+        if not path.exists():
+            path.mkdir(parents=True)
+            created.append(path)
+    today = date.today().isoformat()
+    for relative in ("03-wiki/index.md", "03-wiki/log.md", "03-wiki/open-questions.md"):
+        path = paths.data_root / relative
+        if not path.exists():
+            path.write_text(CURRENT_FILES[relative].format(today=today), encoding="utf-8")
+            created.append(path)
     return created

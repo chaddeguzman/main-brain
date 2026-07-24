@@ -5,7 +5,13 @@ import json
 import sys
 from pathlib import Path
 
-from .broker import approve_exact, approve_intent, load_proposal, propose
+from .broker import (
+    approve_exact,
+    approve_intent,
+    load_proposal,
+    propose,
+    recover_wiki_transactions,
+)
 from .capture import capture_note
 from .indexes import generate_indexes
 from .ingest import ingest
@@ -13,6 +19,7 @@ from .paths import CONFIG_PATH, load_paths, write_config
 from .projects import register_project, registration_preview
 from .scaffold import scaffold
 from .validation import validate
+from .wiki import add_source, initialize_wiki, lint_wiki, wiki_status
 
 
 def _print(value: object) -> None:
@@ -82,6 +89,23 @@ def _command_broker(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_wiki(args: argparse.Namespace) -> int:
+    paths = load_paths(require_config=True)
+    if args.wiki_command == "init":
+        _print(initialize_wiki(paths))
+    elif args.wiki_command == "add":
+        _print(add_source(paths, args.path))
+    elif args.wiki_command == "status":
+        _print(wiki_status(paths))
+    elif args.wiki_command == "lint":
+        errors = lint_wiki(paths)
+        _print({"valid": not errors, "errors": errors})
+        return int(bool(errors))
+    elif args.wiki_command == "recover":
+        _print({"recovered": recover_wiki_transactions(paths)})
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="second-self")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -148,6 +172,16 @@ def build_parser() -> argparse.ArgumentParser:
     exact.add_argument("--confirm")
     exact.add_argument("--agent", default="unknown")
     broker.set_defaults(func=_command_broker)
+
+    wiki = sub.add_parser("wiki")
+    wiki_sub = wiki.add_subparsers(dest="wiki_command", required=True)
+    wiki_sub.add_parser("init")
+    wiki_add = wiki_sub.add_parser("add")
+    wiki_add.add_argument("path", type=Path)
+    wiki_sub.add_parser("status")
+    wiki_sub.add_parser("lint")
+    wiki_sub.add_parser("recover")
+    wiki.set_defaults(func=_command_wiki)
     return parser
 
 

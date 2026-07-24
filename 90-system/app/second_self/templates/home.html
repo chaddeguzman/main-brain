@@ -75,6 +75,35 @@
 <section class="projects-panel">
   <div class="section-heading compact">
     <div>
+      <p class="eyebrow">LLM Wiki</p>
+      <h2>Knowledge processing</h2>
+    </div>
+    <span class="state-label">
+      {% if snapshot.wiki.enabled %}Configured{% else %}Not initialized{% endif %}
+    </span>
+  </div>
+  <div class="card-grid">
+    <article class="queue-card">
+      <span class="count">{{ snapshot.wiki.pending|length }}</span>
+      <h3>Pending Raw sources</h3>
+      <p>{{ snapshot.wiki.unsupported|length }} unsupported and {{ snapshot.wiki.duplicates|length }} duplicate source(s).</p>
+    </article>
+    <article class="queue-card">
+      <span class="count">{{ snapshot.wiki.processed_sources }}</span>
+      <h3>Processed sources</h3>
+      <p>{{ snapshot.wiki.changed_curated|length }} changed and {{ snapshot.wiki.unprocessed_curated|length }} unprocessed curated note(s).</p>
+    </article>
+    <article class="queue-card">
+      <span class="count">{{ snapshot.wiki.interrupted_transactions|length }}</span>
+      <h3>Recovery</h3>
+      <p>{% if snapshot.wiki.interrupted_transactions %}Run <code>second-self wiki recover</code>.{% else %}No interrupted transactions.{% endif %}</p>
+    </article>
+  </div>
+</section>
+
+<section class="projects-panel">
+  <div class="section-heading compact">
+    <div>
       <p class="eyebrow">Current work</p>
       <h2>Active projects</h2>
     </div>

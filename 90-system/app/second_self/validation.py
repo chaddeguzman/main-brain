@@ -18,6 +18,7 @@ ABSOLUTE_USER_PATH = re.compile(r"[A-Za-z]:\\Users\\[^\\\s]+\\")
 IGNORED_TRACKED_PREFIXES = (
     "01-strategy-storage/",
     "02-skills-projects/projects/",
+    "03-wiki/",
     ".second-self.local.json",
     ".second-self-cache/",
 )
@@ -35,6 +36,7 @@ ALLOWED_PRIVATE_SCAFFOLD_FILES = {
     "01-strategy-storage/04 References/04 docs/.gitkeep",
     "01-strategy-storage/05 Reviews/.gitkeep",
     "02-skills-projects/projects/.gitkeep",
+    "03-wiki/.gitkeep",
 }
 
 

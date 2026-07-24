@@ -82,10 +82,13 @@ def ingest(paths: SecondSelfPaths, source: Path) -> dict[str, str | list[str] | 
 
     digest = file_hash(source)
     short = digest[:12]
-    originals = paths.layer1 / "75-imports" / "originals"
-    extracted_dir = paths.layer1 / "75-imports" / "extracted"
-    inbox = paths.layer1 / "00-inbox"
-    original = originals / f"{digest}{source.suffix.lower()}"
+    bundle = paths.raw / f"Import - {source.stem} - {short}"
+    originals = bundle / "originals"
+    extracted_dir = bundle / "extracted"
+    inbox = bundle
+    originals.mkdir(parents=True, exist_ok=True)
+    extracted_dir.mkdir(parents=True, exist_ok=True)
+    original = originals / source.name
     duplicate = original.exists()
     if not duplicate:
         shutil.copy2(source, original)
@@ -121,7 +124,7 @@ SHA-256: `{digest}`
             encoding="utf-8",
         )
 
-    intake = inbox / f"Import - {source.stem} - {short}.md"
+    intake = inbox / "intake.md"
     if not intake.exists():
         intake.write_text(
             f"""---
@@ -141,8 +144,8 @@ related:
 
 - SHA-256: `{digest}`
 - Original filename: `{source.name}`
-- Immutable original: [{original.name}](../75-imports/originals/{original.name})
-- Extraction: [{extracted.name}](../75-imports/extracted/{extracted.name})
+- Immutable original: [{original.name}](originals/{original.name})
+- Extraction: [{extracted.name}](extracted/{extracted.name})
 
 ## Proposed Derived Notes
 
@@ -159,4 +162,3 @@ artifact after derived notes are approved.
         "intake": str(intake),
         "warnings": warnings,
     }
-

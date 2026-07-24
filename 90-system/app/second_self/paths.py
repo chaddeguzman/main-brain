@@ -24,6 +24,26 @@ class SecondSelfPaths:
         return self.data_root / "02-skills-projects" / "projects"
 
     @property
+    def raw(self) -> Path:
+        return self.layer1 / "01 Notes" / "00 Raw"
+
+    @property
+    def processed(self) -> Path:
+        return self.layer1 / "01 Notes" / "99 Processed"
+
+    @property
+    def wiki(self) -> Path:
+        return self.data_root / "03-wiki"
+
+    @property
+    def cache(self) -> Path:
+        return self.data_root / ".second-self-cache"
+
+    @property
+    def wiki_transactions(self) -> Path:
+        return self.cache / "wiki-transactions"
+
+    @property
     def audit(self) -> Path:
         return self.layer1 / "99-audit"
 
